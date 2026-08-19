@@ -1,5 +1,11 @@
 
 import datetime
+import os
+from dotenv import load_dotenv
+import requests
+
+load_dotenv()
+
 
 class Word:
     def __init__(self, word, definition):
@@ -56,9 +62,9 @@ class Word:
         return word
 
 class Word_Set:
-    def __init__(self, words):
+    def __init__(self, ):
         self.set_id = datetime.datetime.now().isoformat()
-        self.words = words          # a list of Word objects
+        self.words = self.build_word_set()          # a list of Word objects
         self.set_complete = False
         self.completed_date = None
 
@@ -73,3 +79,52 @@ class Word_Set:
     def get_pending_words(self): 
         return [word for word in self.words if word.mastered == False]
 
+    def build_word_set(self, target_count=15, max_attempts=50):
+        words = []
+        attempts = 0
+
+        while len(words) < target_count and attempts < max_attempts:
+            attempts += 1
+            w = self.get_word()
+            if w is None:
+                continue
+            words.append(w)
+
+        if len(words) < target_count:
+            raise RuntimeError(f"Only found {len(words)}/{target_count} words after {attempts} attempts")
+
+        return words
+
+    def get_word(self):
+        api_key = os.environ.get("COLLIGIATE_VOCAB_KEY")
+        word_url = "https://random-word-api.herokuapp.com/word"
+
+        count = 0
+        while count < 10:
+            count += 1
+
+            response = requests.get(word_url)
+            word = response.json()[0]
+            
+           
+            definition_url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
+            response = requests.get(definition_url)
+
+            if response.status_code != 200: 
+                continue 
+
+            data = response.json()
+
+            if not data or isinstance(data[0], str): 
+                # checks if the response is empty or if the first element is a string (which indicates no definition found)
+                continue
+
+            definition = response.json()[0]
+
+            if "shortdef" not in definition or not definition["shortdef"]:
+                continue
+
+            return Word(word, definition['shortdef'][0])
+
+        return None # Return None if no valid word is found after 10 attempts
+    
