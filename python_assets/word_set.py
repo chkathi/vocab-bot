@@ -1,4 +1,3 @@
-
 import datetime
 import os
 from dotenv import load_dotenv
@@ -31,7 +30,7 @@ class Word:
         self.increment_times_seen()
 
     def increment_streak(self):
-        self.streak += 1    
+        self.streak += 1
 
     def increment_times_seen(self):
         self.times_seen += 1
@@ -61,22 +60,33 @@ class Word:
         word.user_sentence = data["user_sentence"]
         return word
 
+
 class Word_Set:
-    def __init__(self, ):
+    def __init__(self, words=None):
+        # Fast, no network calls. Defaults to an empty set of words.
         self.set_id = datetime.datetime.now().isoformat()
-        self.words = self.build_word_set()          # a list of Word objects
+        self.words = words if words is not None else []
         self.set_complete = False
         self.completed_date = None
+
+    @classmethod
+    def generate_new(cls, target_count=15, max_attempts=50):
+        # Step 1: make an empty instance (fast, can't fail)
+        instance = cls()
+        # Step 2: populate it using the existing instance method
+        instance.words = instance.build_word_set(target_count, max_attempts)
+        # Step 3: return the fully-populated instance
+        return instance
 
     def add_word(self, word):
         self.words.append(word)
 
     def check_mastered(self):
-        if all(word.mastered for word in self.words): 
+        if all(word.mastered for word in self.words):
             self.set_complete = True
-            self.completed_date = datetime.datetime.now().isoformat()  
+            self.completed_date = datetime.datetime.now().isoformat()
 
-    def get_pending_words(self): 
+    def get_pending_words(self):
         return [word for word in self.words if word.mastered == False]
 
     def build_word_set(self, target_count=15, max_attempts=50):
@@ -105,17 +115,15 @@ class Word_Set:
 
             response = requests.get(word_url)
             word = response.json()[0]
-            
-           
             definition_url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
             response = requests.get(definition_url)
 
-            if response.status_code != 200: 
-                continue 
+            if response.status_code != 200:
+                continue
 
             data = response.json()
 
-            if not data or isinstance(data[0], str): 
+            if not data or isinstance(data[0], str):
                 # checks if the response is empty or if the first element is a string (which indicates no definition found)
                 continue
 
@@ -126,5 +134,21 @@ class Word_Set:
 
             return Word(word, definition['shortdef'][0])
 
-        return None # Return None if no valid word is found after 10 attempts
-    
+        return None  # Return None if no valid word is found after 10 attempts
+
+    def to_dict(self):
+        return {
+            "set_id": self.set_id,
+            "words": [word.to_dict() for word in self.words],
+            "set_complete": self.set_complete,
+            "completed_date": self.completed_date
+        }
+ 
+    @classmethod
+    def from_dict(cls, data):
+        words = [Word.from_dict(w) for w in data["words"]]
+        instance = cls(words)  # fast — no network calls, just rebuilds from saved data
+        instance.set_id = data["set_id"]
+        instance.set_complete = data["set_complete"]
+        instance.completed_date = data["completed_date"]
+        return instance

@@ -1,8 +1,9 @@
-from word_set import Word_Set
+from python_assets.word_set import Word_Set
+from
 
 
 def main(): 
-    word_set = Word_Set()
+    word_set = Word_Set.generate_new(target_count=15, max_attempts=50)
     count = 0
     for w in word_set.words:
         count += 1
