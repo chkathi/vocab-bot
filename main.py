@@ -1,26 +1,29 @@
 import time
-from python_assets.set_manager import SetManager
+from python_assets.quiz import Quiz
 
 
 def main(): 
-    manager = SetManager()
-    current_set = manager.load_initial_set()
+    # Generate a new quiz instance, which will load the initial set and start buffering the next one.
+    q = Quiz()
 
-    
-    print("Current set loaded:")
-    for word in current_set.words:
-        print(f"- {word.word}: {word.definition}")
+    # Get the next question from the quiz.
+    question = q.get_next_question()
 
-    while manager.buffer_set is None:
-        print("  buffer_set is still None...")
-        time.sleep(1)
+    # Print the question and options to the console.
+    print(f"Question: What is the definition of '{question['word']}'?")
+    for i, option in enumerate(question['options'], start=1):
+        print(f"{i}. {option}")
 
-    # Once the buffer set is ready, print its length
-    buffer_set = manager.buffer_set
-    
-    print(f"Buffer set length: {len(buffer_set.words)}")
-    
-    
+    # Get user input for the answer
+    user_choice = input("Press Enter to submit your answer...")
+    chosen_definition = question['options'][int(user_choice) - 1]
+
+    # Submit the answer and check if it's correct
+    is_correct = q.submit_answer(question['word'], chosen_definition)
+    if is_correct:
+        print("Correct!")
+    else:
+        print("Incorrect.")
 
 if __name__ == "__main__":
     main()
