@@ -89,6 +89,23 @@ class Word_Set:
     def get_pending_words(self):
         return [word for word in self.words if word.mastered == False]
 
+    def to_dict(self):
+        return {
+            "set_id": self.set_id,
+            "words": [word.to_dict() for word in self.words],
+            "set_complete": self.set_complete,
+            "completed_date": self.completed_date
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        words = [Word.from_dict(w) for w in data["words"]]
+        instance = cls(words)  # fast — no network calls, just rebuilds from saved data
+        instance.set_id = data["set_id"]
+        instance.set_complete = data["set_complete"]
+        instance.completed_date = data["completed_date"]
+        return instance
+
     def build_word_set(self, target_count=15, max_attempts=50):
         words = []
         attempts = 0
@@ -113,10 +130,15 @@ class Word_Set:
         while count < 10:
             count += 1
 
-            response = requests.get(word_url)
-            word = response.json()[0]
-            definition_url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
-            response = requests.get(definition_url)
+            try:
+                response = requests.get(word_url, timeout=5)
+                word = response.json()[0]
+                definition_url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={api_key}"
+                response = requests.get(definition_url, timeout=5)
+            except requests.exceptions.RequestException:
+                # Covers connection drops, timeouts, DNS failures, etc.
+                # Treat it the same as a bad word: skip and retry.
+                continue
 
             if response.status_code != 200:
                 continue
@@ -135,20 +157,3 @@ class Word_Set:
             return Word(word, definition['shortdef'][0])
 
         return None  # Return None if no valid word is found after 10 attempts
-
-    def to_dict(self):
-        return {
-            "set_id": self.set_id,
-            "words": [word.to_dict() for word in self.words],
-            "set_complete": self.set_complete,
-            "completed_date": self.completed_date
-        }
- 
-    @classmethod
-    def from_dict(cls, data):
-        words = [Word.from_dict(w) for w in data["words"]]
-        instance = cls(words)  # fast — no network calls, just rebuilds from saved data
-        instance.set_id = data["set_id"]
-        instance.set_complete = data["set_complete"]
-        instance.completed_date = data["completed_date"]
-        return instance
