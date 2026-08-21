@@ -3,11 +3,17 @@ import os
 
 from python_assets.word_set import Word_Set
 
-SAVE_PATH = "current_set.json"
-HISTORY_PATH = "history.json"
+STORAGE_DIR = "storage_data"
+SAVE_PATH = os.path.join(STORAGE_DIR, "current_set.json")
+HISTORY_PATH = os.path.join(STORAGE_DIR, "history.json")
+
+
+def _ensure_storage_dir():
+    os.makedirs(STORAGE_DIR, exist_ok=True)
 
 
 def save_set(word_set, path=SAVE_PATH):
+    _ensure_storage_dir()
     with open(path, "w") as f:
         json.dump(word_set.to_dict(), f, indent=2)
 
@@ -66,5 +72,6 @@ def append_to_history(word_set, path=HISTORY_PATH):
     history = load_history(path)
     history.append(word_set.to_dict())
 
+    _ensure_storage_dir()
     with open(path, "w") as f:
         json.dump(history, f, indent=2)
