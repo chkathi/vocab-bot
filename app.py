@@ -5,6 +5,7 @@ from python_assets.quiz import Quiz
 app = Flask(__name__)
 
 quiz = Quiz() 
+print("Flask app initialized with Quiz instance.")
 
 @app.route('/hello')
 def hello():
@@ -15,9 +16,17 @@ def hello():
 def get_question():
     return quiz.get_next_question()
 
+# GET current set
+@app.route("/current_set", methods=["GET"])
+def get_current_set(): 
+    return quiz.current_set.to_dict()
+
 @app.route("/submit", methods=["POST"])
 def submit_answer():
     data = request.get_json()
 
     return quiz.submit_answer(data["word"], data["chosen_definition"])
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
 

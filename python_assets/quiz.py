@@ -54,7 +54,10 @@ class Quiz:
 
   # in quiz.py
     def submit_answer(self, word_text, chosen_definition):
-        word = ...  # existing lookup logic
+        word = word_text  # existing lookup logic
+
+        # Find the word (then check the definition)
+
         is_correct = (chosen_definition == word.definition)
         if is_correct:
             word.mark_correct()
