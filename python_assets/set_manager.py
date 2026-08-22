@@ -2,7 +2,7 @@ import threading
 
 # Being run from main.py, so need to import from python_assets
 from python_assets.word_set import Word_Set
-from python_assets.storage import save_set, append_to_history, load_or_create_set
+from python_assets.storage import save_set, append_to_history, load_or_create_set, load_history
 
 
 class SetManager:
@@ -61,3 +61,6 @@ class SetManager:
         self.start_buffer_generation()
 
         return self.current_set
+
+    def get_history(self): 
+        return load_history()

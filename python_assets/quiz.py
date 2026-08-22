@@ -1,6 +1,7 @@
 import random
 
 from python_assets.set_manager import SetManager
+from python_assets.storage import load_history
 
 
 class Quiz:
@@ -54,10 +55,13 @@ class Quiz:
 
   # in quiz.py
     def submit_answer(self, word_text, chosen_definition):
-        word = word_text  # existing lookup logic
-
         # Find the word (then check the definition)
-
+        word = next(
+            (w for w in self.current_set.words if w.word == word_text), None
+        )
+        if word is None:
+            raise ValueError(f"Word '{word_text}' not found in current set")
+        
         is_correct = (chosen_definition == word.definition)
         if is_correct:
             word.mark_correct()
@@ -75,3 +79,6 @@ class Quiz:
             "word_mastered": word.mastered,
             "set_completed": set_completed
         }
+
+    def get_history(self):
+        return self.manager.get_history()
