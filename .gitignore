@@ -1,2 +1,3 @@
 /.venv
 .env
+/python_assets/__pycache__
