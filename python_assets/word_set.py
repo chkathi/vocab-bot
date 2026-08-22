@@ -86,6 +86,8 @@ class Word_Set:
             self.set_complete = True
             self.completed_date = datetime.datetime.now().isoformat()
 
+        return self.set_complete
+
     def get_pending_words(self):
         return [word for word in self.words if word.mastered == False]
 

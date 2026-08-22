@@ -10,10 +10,6 @@ CORS(app)
 quiz = Quiz() 
 print("Flask app initialized with Quiz instance.")
 
-@app.route('/hello')
-def hello():
-    return "Hello, World!"
-
 # GET to get next question
 @app.route("/question", methods=["GET"])
 def get_question():
@@ -24,12 +20,20 @@ def get_question():
 def get_current_set(): 
     return quiz.current_set.to_dict()
 
+@app.route("/history", methods=["GET"])
+def get_history():
+    history = quiz.get_history()
+    if not history:
+        return {"message": "No sets mastered yet", "history": []}
+    return {"history": history}
+
 @app.route("/submit", methods=["POST"])
 def submit_answer():
     data = request.get_json()
 
     return quiz.submit_answer(data["word"], data["chosen_definition"])
 
+'''
 @app.route("/auto-answer", methods=["GET"])
 def auto_answer(): 
     for word in quiz.current_set.words:
@@ -41,7 +45,10 @@ def auto_answer():
             if word.mastered:
                 print(f"Answered '{word.word}' correctly. Mastered?: {word.mastered}")
 
+   
+
     return quiz.current_set.to_dict()
+'''
 
 
 if __name__ == "__main__":
