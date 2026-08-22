@@ -52,29 +52,23 @@ class Quiz:
             "correct_answer": correct_definition,
         }
 
+  # in quiz.py
     def submit_answer(self, word_text, chosen_definition):
-        """
-        Looks up the word being answered, marks it correct/incorrect,
-        checks if the whole set just became mastered, and -- if so --
-        triggers SetManager.complete_current_set() (history + rotation).
-        Returns True/False for whether the answer was correct.
-        """
-        word = next(
-            (w for w in self.current_set.words if w.word == word_text), None
-        )
-        if word is None:
-            raise ValueError(f"Word '{word_text}' not found in current set")
-
-        is_correct = chosen_definition == word.definition
-
+        word = ...  # existing lookup logic
+        is_correct = (chosen_definition == word.definition)
         if is_correct:
             word.mark_correct()
         else:
             word.mark_incorrect()
-
-        self.current_set.check_mastered()
-
-        if self.current_set.set_complete:
+        
+        set_completed = False
+        if self.current_set.check_mastered():
             self.manager.complete_current_set()
-
-        return is_correct
+            set_completed = True
+        
+        return {
+            "correct": is_correct,
+            "correct_definition": word.definition,
+            "word_mastered": word.mastered,
+            "set_completed": set_completed
+        }
