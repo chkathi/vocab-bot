@@ -1,29 +1,8 @@
-import time
-from python_assets.quiz import Quiz
+from python_assets.test import test_finish_set, test_quiz_question, test_current_set_and_buffer
 
 
 def main(): 
-    # Generate a new quiz instance, which will load the initial set and start buffering the next one.
-    q = Quiz()
-
-    # Get the next question from the quiz.
-    question = q.get_next_question()
-
-    # Print the question and options to the console.
-    print(f"\nQuestion: What is the definition of '{question['word']}'?")
-    for i, option in enumerate(question['options'], start=1):
-        print(f"{i}. {option}")
-
-    # Get user input for the answer
-    user_choice = input("\nPress Enter to submit your answer...")
-    chosen_definition = question['options'][int(user_choice) - 1]
-
-    # Submit the answer and check if it's correct
-    is_correct = q.submit_answer(question['word'], chosen_definition)
-    if is_correct:
-        print("Correct!\n")
-    else:
-        print("Incorrect.\n")
+    print("Hello World!")
 
 if __name__ == "__main__":
     main()
