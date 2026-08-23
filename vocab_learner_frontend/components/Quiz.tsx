@@ -5,7 +5,11 @@ import { useState, useEffect } from "react";
 import { getQuestion, submitAnswer } from "@/lib/api";
 import type { Question, AnswerResponse } from "@/lib/types";
 
-export default function Quiz() {
+export default function Quiz({
+  onAnswerSubmitted,
+}: {
+  onAnswerSubmitted: () => void;
+}) {
   const [question, setQuestion] = useState<Question | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<AnswerResponse | null>(null);
@@ -31,6 +35,7 @@ export default function Quiz() {
       chosen_definition: selected,
     });
     setResult(res);
+    onAnswerSubmitted();
   }
 
   if (loading || !question) return <p>Loading...</p>;
@@ -42,14 +47,16 @@ export default function Quiz() {
       {!result ? (
         <>
           {question.options.map((opt) => (
-            <div>
+            <div key={opt} style={{ margin: "8px 0" }}>
               <button
-                key={opt}
                 onClick={() => setSelected(opt)}
-                style={{ fontWeight: selected === opt ? "bold" : "normal" }}
+                style={{
+                  display: "block",
+                  fontWeight: selected === opt ? "bold" : "normal",
+                }}
               >
                 {opt}
-              </button> 
+              </button>
             </div>
           ))}
           <button onClick={handleSubmit} disabled={!selected}>
@@ -60,6 +67,11 @@ export default function Quiz() {
         <>
           <p>{result.correct ? "Correct!" : "Incorrect."}</p>
           <p>Correct definition: {result.correct_definition}</p>
+          {result.set_completed && (
+            <p style={{ fontWeight: "bold" }}>
+              🎉 Set complete! Starting a new set.
+            </p>
+          )}
           <button onClick={loadQuestion}>Continue</button>
         </>
       )}
