@@ -1,6 +1,6 @@
 import time
-from backend.python_assets.quiz import Quiz
-from backend.python_assets.set_manager import SetManager
+from python_assets.quiz import Quiz
+from python_assets.set_manager import SetManager
 
 def test_current_set_and_buffer():
     """

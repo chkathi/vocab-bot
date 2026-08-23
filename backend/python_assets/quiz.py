@@ -1,7 +1,7 @@
 import random
 
-from backend.python_assets.set_manager import SetManager
-from backend.python_assets.storage import load_history
+from python_assets.set_manager import SetManager
+from python_assets.storage import load_history
 
 
 class Quiz:
