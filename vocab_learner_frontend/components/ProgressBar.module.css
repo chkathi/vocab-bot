@@ -1,0 +1,34 @@
+/* components/ProgressBar.module.css */
+.wrapper {
+  max-width: 400px;
+  margin: 24px auto 0;
+  font-family: system-ui, sans-serif;
+}
+
+.count {
+  color: #fcfcfc;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #fcfcfc;
+  color: #30292f;
+  opacity: 0.5;
+}
+
+.chipMastered {
+  opacity: 1;
+  background: #4ade80;
+  color: #173404;
+  font-weight: 600;
+}

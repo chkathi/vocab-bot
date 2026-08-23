@@ -4,8 +4,13 @@
 import { useState, useEffect } from "react";
 import { getCurrentSet } from "@/lib/api";
 import type { CurrentSet } from "@/lib/types";
+import styles from "./ProgressBar.module.css";
 
-export default function ProgressBar({ refreshTrigger }: { refreshTrigger: number }) {
+export default function ProgressBar({
+  refreshTrigger,
+}: {
+  refreshTrigger: number;
+}) {
   const [set, setSet] = useState<CurrentSet | null>(null);
 
   useEffect(() => {
@@ -17,11 +22,18 @@ export default function ProgressBar({ refreshTrigger }: { refreshTrigger: number
   const masteredCount = set.words.filter((w) => w.mastered).length;
 
   return (
-    <div>
-      <p>{masteredCount}/{set.words.length} mastered</p>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+    <div className={styles.wrapper}>
+      <p className={styles.count}>
+        {masteredCount}/{set.words.length} mastered
+      </p>
+      <div className={styles.chips}>
         {set.words.map((w) => (
-          <span key={w.word} style={{ opacity: w.mastered ? 1 : 0.5 }}>
+          <span
+            key={w.word}
+            className={`${styles.chip} ${
+              w.mastered ? styles.chipMastered : ""
+            }`}
+          >
             {w.word}
           </span>
         ))}

@@ -1,0 +1,70 @@
+.wrapper {
+  max-width: 420px;
+  margin: 24px auto;
+  font-family: system-ui, sans-serif;
+}
+
+.dateHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.dateLabel {
+  color: #fcfcfc;
+  font-size: 13px;
+}
+
+.chevron {
+  color: #fcfcfc;
+  font-size: 12px;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.setCard {
+  background: #30292f;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #02111b;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.word {
+  color: #93b0bc;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.definition {
+  color: #fcfcfc;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.empty {
+  color: #fcfcfc;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 40px;
+}

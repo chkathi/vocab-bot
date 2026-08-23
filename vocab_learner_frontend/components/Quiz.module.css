@@ -1,0 +1,84 @@
+/* components/Quiz.module.css */
+.card {
+  background: #30292f;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  margin: 24px auto;
+  font-family: system-ui, sans-serif;
+}
+
+.word {
+  color: #fcfcfc;
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border: 1px solid #5d737e;
+  border-radius: 8px;
+  background: #5d737e;
+  color: #fcfcfc;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.optionSelected {
+  border: 2px solid #5b8def;
+}
+
+.submitButton {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #5b8def;
+  color: #02111b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  background: #3f4045;
+  color: #5d737e;
+  cursor: not-allowed;
+}
+
+.feedbackCorrect {
+  color: #4ade80;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.feedbackIncorrect {
+  color: #f87171;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.definition {
+  color: #fcfcfc;
+  margin: 8px 0 16px;
+}
+
+.setComplete {
+  color: #fbbf24;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.continueButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #5b8def;
+  color: #02111b;
+  font-weight: 600;
+  cursor: pointer;
+}

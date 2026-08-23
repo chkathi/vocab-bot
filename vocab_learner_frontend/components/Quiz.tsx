@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { getQuestion, submitAnswer } from "@/lib/api";
 import type { Question, AnswerResponse } from "@/lib/types";
+import styles from "./Quiz.module.css";
 
 export default function Quiz({
   onAnswerSubmitted,
@@ -41,38 +42,50 @@ export default function Quiz({
   if (loading || !question) return <p>Loading...</p>;
 
   return (
-    <div>
-      <h2>{question.word}</h2>
+    <div className={styles.card}>
+      <div className={styles.word}>{question.word}</div>
 
       {!result ? (
         <>
           {question.options.map((opt) => (
-            <div key={opt} style={{ margin: "8px 0" }}>
-              <button
-                onClick={() => setSelected(opt)}
-                style={{
-                  display: "block",
-                  fontWeight: selected === opt ? "bold" : "normal",
-                }}
-              >
-                {opt}
-              </button>
-            </div>
+            <button
+              key={opt}
+              onClick={() => setSelected(opt)}
+              className={`${styles.option} ${
+                selected === opt ? styles.optionSelected : ""
+              }`}
+            >
+              {opt}
+            </button>
           ))}
-          <button onClick={handleSubmit} disabled={!selected}>
+          <button
+            onClick={handleSubmit}
+            disabled={!selected}
+            className={styles.submitButton}
+          >
             Submit
           </button>
         </>
       ) : (
         <>
-          <p>{result.correct ? "Correct!" : "Incorrect."}</p>
-          <p>Correct definition: {result.correct_definition}</p>
+          <p
+            className={
+              result.correct ? styles.feedbackCorrect : styles.feedbackIncorrect
+            }
+          >
+            {result.correct ? "Correct!" : "Incorrect."}
+          </p>
+          <p className={styles.definition}>
+            Correct definition: {result.correct_definition}
+          </p>
           {result.set_completed && (
-            <p style={{ fontWeight: "bold" }}>
+            <p className={styles.setComplete}>
               🎉 Set complete! Starting a new set.
             </p>
           )}
-          <button onClick={loadQuestion}>Continue</button>
+          <button onClick={loadQuestion} className={styles.continueButton}>
+            Continue
+          </button>
         </>
       )}
     </div>
