@@ -2,76 +2,131 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getHistory } from "@/lib/api";
-import type { HistoryResponse } from "@/lib/types";
+import { listSets, generateSet, ApiError } from "@/lib/api";
+import type { WordSet } from "@/lib/types";
 import styles from "./History.module.css";
 
-export default function History() {
-  const [data, setData] = useState<HistoryResponse | null>(null);
+interface HistoryProps {
+  onSelectSet: (setId: string) => void;
+}
+
+export default function History({ onSelectSet }: HistoryProps) {
+  const [sets, setSets] = useState<WordSet[] | null>(null);
   const [openSets, setOpenSets] = useState<Set<string>>(new Set());
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHistory().then(setData);
+    loadSets();
   }, []);
 
-  function toggleSet(key: string) {
+  function loadSets() {
+    setError(null);
+    listSets()
+      .then(setSets)
+      .catch((e: ApiError) => setError(e.message));
+  }
+
+  function toggleSet(setId: string) {
     setOpenSets((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
+      if (next.has(setId)) {
+        next.delete(setId);
       } else {
-        next.add(key);
+        next.add(setId);
       }
       return next;
     });
   }
 
-  if (!data) return <p className={styles.empty}>Loading...</p>;
+  async function handleGenerate() {
+    setGenerating(true);
+    setError(null);
+    try {
+      await generateSet();
+      loadSets();
+    } catch (e) {
+      setError((e as ApiError).message);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
-  if (!data.history || data.history.length === 0) {
+  function setLabel(set: WordSet) {
+    if (set.set_complete) {
+      return `Mastered ${new Date(set.completed_date!).toLocaleDateString()}`;
+    }
+    const masteredCount = set.words.filter((w) => w.mastered).length;
+    return `In progress — ${masteredCount}/${set.words.length} mastered`;
+  }
+
+  if (error) {
     return (
-      <p className={styles.empty}>{data.message || "No sets mastered yet."}</p>
+      <div className={styles.wrapper}>
+        <p className={styles.empty}>{error}</p>
+        <button className={styles.generateButton} onClick={loadSets}>
+          Retry
+        </button>
+      </div>
     );
   }
 
+  if (!sets) return <p className={styles.empty}>Loading...</p>;
+
   return (
     <div className={styles.wrapper}>
-      {data.history.map((entry, i) => {
-        const key = entry.completed_date + i;
-        const isOpen = openSets.has(key);
+      <button
+        className={styles.generateButton}
+        onClick={handleGenerate}
+        disabled={generating}
+      >
+        {generating ? "Generating..." : "Generate new set"}
+      </button>
 
-        return (
-          <div key={key}>
-            <button
-              className={styles.dateHeader}
-              onClick={() => toggleSet(key)}
-            >
-              <span className={styles.dateLabel}>
-                Set completed{" "}
-                {new Date(entry.completed_date).toLocaleDateString()}
-              </span>
-              <span
-                className={`${styles.chevron} ${
-                  isOpen ? styles.chevronOpen : ""
-                }`}
-              >
-                ▼
-              </span>
-            </button>
+      {sets.length === 0 ? (
+        <p className={styles.empty}>No sets yet — generate one to start.</p>
+      ) : (
+        sets.map((set) => {
+          const isOpen = openSets.has(set.set_id);
 
-            {isOpen && (
-              <div className={styles.setCard}>
-                {entry.words.map((w) => (
-                  <div key={w.word} className={styles.row}>
-                    <span className={styles.word}>{w.word}</span>
-                    <span className={styles.definition}>{w.definition}</span>
-                  </div>
-                ))}
+          return (
+            <div key={set.set_id}>
+              <div className={styles.setHeaderRow}>
+                <button
+                  className={styles.dateHeader}
+                  onClick={() => toggleSet(set.set_id)}
+                >
+                  <span className={styles.dateLabel}>{setLabel(set)}</span>
+                  <span
+                    className={`${styles.chevron} ${
+                      isOpen ? styles.chevronOpen : ""
+                    }`}
+                  >
+                    ▼
+                  </span>
+                </button>
+                <button
+                  className={styles.selectButton}
+                  onClick={() => onSelectSet(set.set_id)}
+                >
+                  Practice
+                </button>
               </div>
-            )}
-          </div>
-        );
-      })}
+
+              {isOpen && (
+                <div className={styles.setCard}>
+                  {set.words.map((w) => (
+                    <div key={w.word} className={styles.row}>
+                      <span className={styles.word}>{w.word}</span>
+                      <span className={styles.definition}>{w.definition}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

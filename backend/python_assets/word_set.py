@@ -2,6 +2,8 @@ import datetime
 import os
 from dotenv import load_dotenv
 import requests
+import uuid
+
 
 load_dotenv()
 
@@ -64,7 +66,7 @@ class Word:
 class Word_Set:
     def __init__(self, words=None):
         # Fast, no network calls. Defaults to an empty set of words.
-        self.set_id = datetime.datetime.now().isoformat()
+        self.set_id = uuid.uuid4().hex[:8]
         self.words = words if words is not None else []
         self.set_complete = False
         self.completed_date = None

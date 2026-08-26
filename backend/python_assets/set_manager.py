@@ -1,66 +1,97 @@
-import threading
-
-# Being run from main.py, so need to import from python_assets
 from python_assets.word_set import Word_Set
-from python_assets.storage import save_set, append_to_history, load_or_create_set, load_history
+from python_assets.storage import (
+    load_current_set,
+    save_current_set,
+    clear_current_set,
+    load_all_sets,
+    get_set_by_id,
+    upsert_set,
+)
 
 
 class SetManager:
     def __init__(self):
-        self.current_set = None
-        self.buffer_set = None
-        self._buffer_thread = None
-        self._lock = threading.Lock()
+        # In-memory mirror of current_set.json -- avoids a disk read on
+        # every single request; reloaded from disk lazily if empty.
+        self.current_set = load_current_set()
 
-    def load_initial_set(self):
+    def _flush_current_to_history(self):
         """
-        Called once at app startup. Synchronous -- the current set has to
-        exist before there's anything to show the user, so this blocks.
-        Once it's ready, kicks off the buffer generation in the background.
+        Pushes whatever's in self.current_set into all_sets.json (loop +
+        rewrite), then clears current_set.json. Called on switch or
+        completion -- never on every answer.
         """
-        self.start_buffer_generation()
-        self.current_set = load_or_create_set()
+        if self.current_set is not None:
+            upsert_set(self.current_set)
+            clear_current_set()
+            self.current_set = None
+
+    def _ensure_current(self, set_id):
+        """
+        Makes sure self.current_set holds the set matching set_id.
+        If a different set is already cached, flushes it first.
+        """
+        if self.current_set is not None and self.current_set.set_id == set_id:
+            return self.current_set
+
+        self._flush_current_to_history()
+
+        word_set = get_set_by_id(set_id)
+        if word_set is None:
+            raise ValueError(f"No set found with id {set_id}")
+
+        self.current_set = word_set
+        save_current_set(self.current_set)
         return self.current_set
 
-    def start_buffer_generation(self):
+    def list_sets(self):
         """
-        Reusable async buffer builder. Spawns a background thread that
-        generates a brand new set and stores it in self.buffer_set when
-        done. Íoes NOT block whatever set is currently in progress --
-        called both at startup and after every rotation.
+        Returns every set for the History page. If a set is currently
+        being practiced, its in-memory version (possibly ahead of what's
+        saved in all_sets.json) is substituted in so History always
+        reflects live progress, not stale data.
         """
-        def _build():
-            new_buffer = Word_Set.generate_new()
-            with self._lock:
-                self.buffer_set = new_buffer
+        sets = load_all_sets()
 
-        self._buffer_thread = threading.Thread(target=_build, daemon=True)
-        self._buffer_thread.start()
+        if self.current_set is not None:
+            for i, existing in enumerate(sets):
+                if existing.set_id == self.current_set.set_id:
+                    sets[i] = self.current_set
+                    break
+            else:
+                sets.append(self.current_set)
 
-    def complete_current_set(self):
+        return sets
+
+    def get_set(self, set_id):
         """
-        Called when the current set is fully mastered.
-        1. Commits the finished set to history.
-        2. Promotes the buffer set to current (waiting for it to finish
-           generating first, if it isn't ready yet -- this is the one
-           spot where the user *could* wait, only if they finish their
-           current set faster than the buffer could generate).
-        3. Saves the new current set to disk.
-        4. Kicks off a fresh buffer for next time.
+        Loads the given set for practice, switching away from whatever
+        was previously current (flushing it first, if needed).
         """
-        append_to_history(self.current_set)
+        return self._ensure_current(set_id)
 
-        if self._buffer_thread is not None:
-            self._buffer_thread.join()  # no-op if already finished
+    def generate_new_set(self):
+        """
+        Synchronous -- called directly by the "Generate new set" button.
+        Flushes whatever was current, generates a fresh set, and makes
+        it current immediately so it's ready to practice.
+        """
+        self._flush_current_to_history()
 
-        with self._lock:
-            self.current_set = self.buffer_set
-            self.buffer_set = None
+        new_set = Word_Set.generate_new()
+        self.current_set = new_set
+        save_current_set(self.current_set)
+        return new_set
 
-        save_set(self.current_set)
-        self.start_buffer_generation()
+    def save_progress(self, word_set):
+        """
+        Called after every answer. Cheap write to current_set.json.
+        If this answer just completed the set, flush it to all_sets.json
+        immediately rather than waiting for the user to switch away.
+        """
+        self.current_set = word_set
 
-        return self.current_set
-
-    def get_history(self): 
-        return load_history()
+        if word_set.set_complete:
+            self._flush_current_to_history()
+        else:
+            save_current_set(word_set)

@@ -9,11 +9,11 @@ export interface Word {
   user_sentence: string;
 }
 
-export interface CurrentSet {
+export interface WordSet {
   set_id: string;
+  words: Word[];
   set_complete: boolean;
   completed_date: string | null;
-  words: Word[];
 }
 
 export interface Question {
@@ -32,14 +32,4 @@ export interface AnswerResponse {
   correct_definition: string;
   word_mastered: boolean;
   set_completed: boolean;
-}
-
-export interface HistoryEntry {
-  words: Word[];
-  completed_date: string;
-}
-
-export interface HistoryResponse {
-  message?: string;
-  history: HistoryEntry[];
 }

@@ -4,21 +4,21 @@ import os
 from python_assets.word_set import Word_Set
 
 STORAGE_DIR = "storage_data"
-SAVE_PATH = os.path.join(STORAGE_DIR, "current_set.json")
-HISTORY_PATH = os.path.join(STORAGE_DIR, "history.json")
+CURRENT_SET_PATH = os.path.join(STORAGE_DIR, "current_set.json")
+ALL_SETS_PATH = os.path.join(STORAGE_DIR, "all_sets.json")
 
 
 def _ensure_storage_dir():
     os.makedirs(STORAGE_DIR, exist_ok=True)
 
 
-def save_set(word_set, path=SAVE_PATH):
-    _ensure_storage_dir()
-    with open(path, "w") as f:
-        json.dump(word_set.to_dict(), f, indent=2)
+# ---------- current_set.json: the one set being actively practiced ----------
 
-
-def load_set(path=SAVE_PATH):
+def load_current_set(path=CURRENT_SET_PATH):
+    """
+    Returns the Word_Set currently cached for practice, or None if
+    nothing is loaded yet (fresh start, or nothing selected).
+    """
     if not os.path.exists(path):
         return None
 
@@ -28,50 +28,64 @@ def load_set(path=SAVE_PATH):
     return Word_Set.from_dict(data)
 
 
-def load_or_create_set(path=SAVE_PATH):
+def save_current_set(word_set, path=CURRENT_SET_PATH):
     """
-    Called once when the app starts.
-    If a saved set exists on disk, load it instantly (no network calls).
-    Otherwise, generate a brand new set (slow -- hits the APIs).
+    Overwrites current_set.json with this set's latest state.
+    Called after every answer -- cheap, single-file write, no looping.
     """
-    existing = load_set(path)
-    if existing is not None:
-        return existing
-
-    new_set = Word_Set.generate_new()
-    save_set(new_set, path)
-    return new_set
+    _ensure_storage_dir()
+    with open(path, "w") as f:
+        json.dump(word_set.to_dict(), f, indent=2)
 
 
-def generate_and_save_set(path=SAVE_PATH):
+def clear_current_set(path=CURRENT_SET_PATH):
     """
-    Always generates a brand new set (slow -- hits the APIs),
-    overwriting whatever is currently saved at `path`.
-    Use this for rotation (old set finished, need a replacement)
-    or for manually forcing a fresh set regardless of what's saved.
+    Called after flushing current_set into all_sets.json (on switch or
+    completion), so a stale current_set.json doesn't linger.
     """
-    new_set = Word_Set.generate_new()
-    save_set(new_set, path)
-    return new_set
+    if os.path.exists(path):
+        os.remove(path)
 
 
-def load_history(path=HISTORY_PATH):
+# ---------- all_sets.json: full history/list of every set ----------
+
+def load_all_sets(path=ALL_SETS_PATH):
     if not os.path.exists(path):
         return []
 
     with open(path, "r") as f:
-        return json.load(f)
+        raw = json.load(f)
+
+    return [Word_Set.from_dict(entry) for entry in raw]
 
 
-def append_to_history(word_set, path=HISTORY_PATH):
-    """
-    Called once, when a set is completed and about to rotate out.
-    Reads the existing history list, appends this set's dict, writes it back.
-    Not called on every answer -- only on set completion.
-    """
-    history = load_history(path)
-    history.append(word_set.to_dict())
-
+def _save_all_sets(sets, path=ALL_SETS_PATH):
     _ensure_storage_dir()
     with open(path, "w") as f:
-        json.dump(history, f, indent=2)
+        json.dump([s.to_dict() for s in sets], f, indent=2)
+
+
+def get_set_by_id(set_id, path=ALL_SETS_PATH):
+    for word_set in load_all_sets(path):
+        if word_set.set_id == set_id:
+            return word_set
+    return None
+
+
+def upsert_set(word_set, path=ALL_SETS_PATH):
+    """
+    Loops through all_sets, replaces the matching entry (or appends if new),
+    and rewrites the whole file. Only called on completion or switch --
+    NOT on every answer.
+    """
+    sets = load_all_sets(path)
+
+    for i, existing in enumerate(sets):
+        if existing.set_id == word_set.set_id:
+            sets[i] = word_set
+            break
+    else:
+        sets.append(word_set)
+
+    _save_all_sets(sets, path)
+    return word_set

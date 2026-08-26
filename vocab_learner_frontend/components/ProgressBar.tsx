@@ -2,20 +2,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCurrentSet } from "@/lib/api";
-import type { CurrentSet } from "@/lib/types";
+import { getSet } from "@/lib/api";
+import type { WordSet } from "@/lib/types";
 import styles from "./ProgressBar.module.css";
 
 export default function ProgressBar({
+  setId,
   refreshTrigger,
 }: {
+  setId: string;
   refreshTrigger: number;
 }) {
-  const [set, setSet] = useState<CurrentSet | null>(null);
+  const [set, setSet] = useState<WordSet | null>(null);
 
   useEffect(() => {
-    getCurrentSet().then(setSet);
-  }, [refreshTrigger]);
+    getSet(setId).then(setSet).catch(() => setSet(null));
+  }, [setId, refreshTrigger]);
 
   if (!set) return null;
 
