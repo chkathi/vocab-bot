@@ -1,14 +1,66 @@
+.setCard {
+  background: #30292f;
+  display: block;
+  width: 70%;
+  margin: 16px auto 16px;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
 .setHeaderRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
 }
 
-.setHeaderRow .dateHeader {
+.headerToggle {
   flex: 1;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  min-width: 0;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setId {
+  color: #fcfcfc;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statusInProgress {
+  color: #93b0bc;
+  font-size: 12px;
+}
+
+.statusMastered {
+  color: #4ade80;
+  font-size: 12px;
+}
+
+.chevron {
+  color: #fcfcfc;
+  font-size: 12px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
 }
 
 .selectButton {
@@ -25,19 +77,52 @@
 
 .generateButton {
   display: block;
-  width: 100%;
+  width: fit-content;
+  margin: 28px auto 28px;
   background: #5b8def;
   color: #fcfcfc;
   border: none;
   border-radius: 12px;
-  padding: 12px 20px;
+  padding: 14px 20px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .generateButton:disabled {
   background: #5d737e;
   cursor: not-allowed;
+}
+
+.wordGrid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px 16px;
+  border-top: 1px solid #02111b;
+  padding-top: 12px;
+  margin-top: 16px;
+}
+
+.row {
+  display: contents;
+}
+
+.word {
+  color: #93b0bc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.definition {
+  color: #fcfcfc;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.empty {
+  color: #fcfcfc;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 40px;
 }

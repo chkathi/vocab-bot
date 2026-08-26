@@ -82,3 +82,19 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.error {
+  color: #f87171;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.retryButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #5b8def;
+  color: #02111b;
+  font-weight: 600;
+  cursor: pointer;
+}

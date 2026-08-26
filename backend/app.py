@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 from flask_cors import CORS
 
-from backend.python_assets.quiz import Quiz
+from python_assets.quiz import Quiz
 
 app = Flask(__name__)
 CORS(app)

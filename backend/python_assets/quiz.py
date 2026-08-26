@@ -1,32 +1,27 @@
 import random
 
 from python_assets.set_manager import SetManager
-from python_assets.storage import load_history
 
 
 class Quiz:
     def __init__(self, manager=None):
-        # Allows injecting a SetManager (useful for testing) or building
-        # a fresh one by default.
+        # No load_initial_set() call anymore -- there's no set to load
+        # until the user picks one or generates one. SetManager's own
+        # __init__ already handles restoring current_set.json if one
+        # happens to exist from a previous session.
         self.manager = manager if manager is not None else SetManager()
-        self.manager.load_initial_set()  # blocks until current_set is ready; buffer starts async
 
-    @property
-    def current_set(self):
-        # Always reads live from the manager -- never our own stale copy.
-        return self.manager.current_set
-
-    def get_next_question(self):
+    def get_next_question(self, set_id):
         """
-        Picks a random unmastered word and builds a 4-option multiple
-        choice question: 1 correct definition + 3 distractors pulled
-        from OTHER words in the same set (mastered or not -- this keeps
-        the distractor pool at a full 14 words regardless of how many
-        are still pending, which sidesteps the "fewer than 4 unmastered
-        words remain" issue flagged in the project doc).
+        Loads/switches to set_id via the manager, then picks a random
+        unmastered word and builds a 4-option multiple choice question.
+        Distractors are drawn from the other 14 words in the set
+        (mastered or not), same approach as before.
         Returns None if there are no pending words left (set is complete).
         """
-        pending = self.current_set.get_pending_words()
+        word_set = self.manager.get_set(set_id)
+
+        pending = word_set.get_pending_words()
         if not pending:
             return None
 
@@ -34,7 +29,7 @@ class Quiz:
         correct_definition = word.definition
 
         distractor_pool = [
-            w.definition for w in self.current_set.words if w.word != word.word
+            w.definition for w in word_set.words if w.word != word.word
         ]
 
         if len(distractor_pool) < 3:
@@ -53,32 +48,37 @@ class Quiz:
             "correct_answer": correct_definition,
         }
 
-  # in quiz.py
-    def submit_answer(self, word_text, chosen_definition):
-        # Find the word (then check the definition)
+    def submit_answer(self, set_id, word_text, chosen_definition):
+        word_set = self.manager.get_set(set_id)
+
         word = next(
-            (w for w in self.current_set.words if w.word == word_text), None
+            (w for w in word_set.words if w.word == word_text), None
         )
         if word is None:
-            raise ValueError(f"Word '{word_text}' not found in current set")
-        
+            raise ValueError(f"Word '{word_text}' not found in set '{set_id}'")
+
         is_correct = (chosen_definition == word.definition)
         if is_correct:
             word.mark_correct()
         else:
             word.mark_incorrect()
-        
-        set_completed = False
-        if self.current_set.check_mastered():
-            self.manager.complete_current_set()
-            set_completed = True
-        
+
+        set_completed = word_set.check_mastered()
+
+        self.manager.save_progress(word_set)
+
         return {
             "correct": is_correct,
             "correct_definition": word.definition,
             "word_mastered": word.mastered,
-            "set_completed": set_completed
+            "set_completed": set_completed,
         }
 
-    def get_history(self):
-        return self.manager.get_history()
+    def list_sets(self):
+        return self.manager.list_sets()
+
+    def generate_new_set(self):
+        return self.manager.generate_new_set()
+
+    def get_set(self, set_id):
+        return self.manager.get_set(set_id)

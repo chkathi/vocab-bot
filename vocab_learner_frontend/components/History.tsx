@@ -52,7 +52,7 @@ export default function History({ onSelectSet }: HistoryProps) {
     }
   }
 
-  function setLabel(set: WordSet) {
+  function statusLabel(set: WordSet) {
     if (set.set_complete) {
       return `Mastered ${new Date(set.completed_date!).toLocaleDateString()}`;
     }
@@ -90,13 +90,24 @@ export default function History({ onSelectSet }: HistoryProps) {
           const isOpen = openSets.has(set.set_id);
 
           return (
-            <div key={set.set_id}>
+            <div key={set.set_id} className={styles.setCard}>
               <div className={styles.setHeaderRow}>
                 <button
-                  className={styles.dateHeader}
+                  className={styles.headerToggle}
                   onClick={() => toggleSet(set.set_id)}
                 >
-                  <span className={styles.dateLabel}>{setLabel(set)}</span>
+                  <div className={styles.headerText}>
+                    <span className={styles.setId}>Set {set.set_id}</span>
+                    <span
+                      className={
+                        set.set_complete
+                          ? styles.statusMastered
+                          : styles.statusInProgress
+                      }
+                    >
+                      {statusLabel(set)}
+                    </span>
+                  </div>
                   <span
                     className={`${styles.chevron} ${
                       isOpen ? styles.chevronOpen : ""
@@ -114,7 +125,7 @@ export default function History({ onSelectSet }: HistoryProps) {
               </div>
 
               {isOpen && (
-                <div className={styles.setCard}>
+                <div className={styles.wordGrid}>
                   {set.words.map((w) => (
                     <div key={w.word} className={styles.row}>
                       <span className={styles.word}>{w.word}</span>

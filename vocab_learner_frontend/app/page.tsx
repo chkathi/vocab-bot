@@ -9,32 +9,43 @@ import styles from "./page.module.css";
 
 export default function Home() {
   const [refreshCount, setRefreshCount] = useState(0);
-  const [tab, setTab] = useState<"quiz" | "history">("quiz");
+  const [tab, setTab] = useState<"history" | "practice">("history");
+  const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+
+  function handleSelectSet(setId: string) {
+    setSelectedSetId(setId);
+    setTab("practice");
+  }
 
   return (
     <div>
       <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${tab === "quiz" ? styles.tabActive : ""}`}
-          onClick={() => setTab("quiz")}
-        >
-          Quiz
-        </button>
         <button
           className={`${styles.tab} ${tab === "history" ? styles.tabActive : ""}`}
           onClick={() => setTab("history")}
         >
           History
         </button>
+        <button
+          className={`${styles.tab} ${tab === "practice" ? styles.tabActive : ""}`}
+          onClick={() => setTab("practice")}
+          disabled={!selectedSetId}
+        >
+          Practice
+        </button>
       </div>
 
-      {tab === "quiz" ? (
+      {tab === "practice" && selectedSetId ? (
         <>
-          <ProgressBar refreshTrigger={refreshCount} />
-          <Quiz onAnswerSubmitted={() => setRefreshCount((c) => c + 1)} />
+          <ProgressBar setId={selectedSetId} refreshTrigger={refreshCount} />
+          <Quiz
+            setId={selectedSetId}
+            onAnswerSubmitted={() => setRefreshCount((c) => c + 1)}
+            onBackToHistory={() => setTab("history")}
+          />
         </>
       ) : (
-        <History />
+        <History onSelectSet={handleSelectSet} />
       )}
     </div>
   );
